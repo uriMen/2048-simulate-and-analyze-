@@ -474,6 +474,82 @@ def greedy_rtnl_game(session):
             max_tile,
             moves_count)
 
+
+def two_steps_ahead_rtnl_game(session):
+    """Play a game.
+
+    Moves strategy: If possible get higher top tile
+    (right before up or down), else try make highest tiles neighbors,
+    else move right, else randomly pick between up or down.
+    Move left only if can't move any other way.
+    Returns: (Score, Highest tile, Number of moves)
+    """
+    moves = {'up': session.up, 'down': session.down}
+    moves_count = 0
+    attempts = 8
+    while not (session.is_game_over() or session.is_win()) and attempts > 0:
+        try:
+            # check if exists a move to increase highest tile.
+            possible_grids = get_if_moved_grids(session.current_grid)
+            higher_tile_possible = []
+            make_neighbors = []
+            for dirc, grid in possible_grids.items():
+                if are_neighbors(get_max_tile(grid)[1]):
+                    make_neighbors.append(dirc)
+            if is_higher_or_equal_max_value(session.current_grid,
+                                            possible_grids['right']):
+                higher_tile_possible += ['right']
+            if is_higher_or_equal_max_value(session.current_grid,
+                                            possible_grids['up']):
+                higher_tile_possible += ['up', 'down']
+            if higher_tile_possible:
+                if 'right' in higher_tile_possible:
+                    session.right()
+                else:
+                    move = np.random.choice(higher_tile_possible)
+                    moves[move]()
+                moves_count += 1
+            # if can't get higher top tile, try make top tile neighbors
+            if make_neighbors:
+                if are_neighbors(get_max_tile(possible_grids['right'])[1]):
+                    session.right()
+                    moves_count += 1
+                else:
+                    up_or_down = ['up', 'down']
+                    np.random.shuffle(up_or_down)
+                    for i in range(2):
+                        if are_neighbors(get_max_tile(
+                                possible_grids[up_or_down[i]])[1]):
+                            moves[up_or_down[i]]()
+                            moves_count += 1
+                            break
+            else:
+                current_board = session.get_board()
+                session.right()
+                if session.did_move(current_board):
+                    moves_count += 1
+                else:
+                    directions = list(moves.keys())
+                    np.random.shuffle(directions)
+                    for i in range(3):
+                        try:
+                            moves[directions[i]]()
+                            if session.did_move(current_board):
+                                moves_count += 1
+                                break
+                        except IndexError:
+                            session.left()
+                            if session.did_move(current_board):
+                                moves_count += 1
+            # time.sleep(0.05)
+            attempts = 8
+        except StaleElementReferenceException:
+            attempts -= 1
+    max_tile, _ = get_max_tile(session.current_grid)
+    return (session.get_score(),
+            max_tile,
+            moves_count)
+
 # class Board(Session):
 #     def __init__(self):
 #         self.board = super().get_board()
@@ -492,8 +568,9 @@ def greedy_rtnl_game(session):
 
 def main():
     ns = Session()
-
-    print(greedy_rtnl_game(ns))
+    for _ in range(4):
+        print(two_steps_ahead_rtnl_game(ns))
+        ns.restart_game()
     # for _ in range(3):
     #     ns.left()
     #     ns.right()
