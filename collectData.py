@@ -18,13 +18,13 @@ strategies = [('tr', ns.total_random_game),
               ('rtnl', ns.right_trend_no_left_game),
               ('radt', ns.right_and_down_trend_game)]
               # ('greedy_random', simulateGame.greedy_random_game)]
-with open('greedy_rtnl3.txt', 'w') as file:
-    for i in range(20):
+with open('2_step_score_greedy_no_left.txt', 'w') as file:
+    for i in range(30):
         # strategy_type, strategy = strategies[np.random.randint(5)]
         # score, highest_tile, moves_count = strategy()
-        score, highest_tile, moves_count = simulateGame.greedy_rtnl_game(ns)
+        score, highest_tile, moves_count = simulateGame.two_step_score_greedy_no_left_game(ns)
         # file.write(f'{strategy_type},{score},{highest_tile},{moves_count}\n')
-        file.write(f'greedy_rtnl,{score},{highest_tile},{moves_count}\n')
+        file.write(f'2ssgnl,{score},{highest_tile},{moves_count}\n')
         ns.restart_game()
         print(f'game {i+1}')
 end_time = datetime.datetime.now()
